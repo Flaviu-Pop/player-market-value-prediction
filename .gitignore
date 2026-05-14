@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.eggs/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data — add players_20.csv manually or via DVC
+data/raw/*.csv
+data/processed/*.csv
+
+# Trained models — large binary files
+models/*.pth
+
+# Outputs
+outputs/charts/*.png
+outputs/metrics/*.csv
+outputs/metrics/*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Scalers
+models/*.pkl
+models/*.joblib
