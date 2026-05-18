@@ -1,19 +1,24 @@
 # src/01_data_preparation.py
+
 # Step 1: Load raw data, clean, assign position groups, apply log transform
-# Input : data/raw/players_20.csv
+
+# Input : data/raw/players_raw.csv
 # Output: data/processed/{gk,def,mid,fwd}_data.csv
-#
-# Usage:
-#   python src/01_data_preparation.py
+
+
+# Usage: python src/01_data_preparation.py
+
 
 import os
 import sys
 import numpy as np
 import pandas as pd
 import warnings
+
 warnings.filterwarnings("ignore")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from config import (
     RAW_CSV, PROC_DIR, TARGET_COL, MIN_VALUE,
     USE_LOG_TARGET, POSITION_GROUPS, POS_KEYS,
@@ -21,7 +26,7 @@ from config import (
 )
 
 
-# ── Position Assignment ────────────────────────────────────────────────────────
+# === Position Assignment ==============================================================================================
 
 def assign_position_group(player_positions: str) -> str:
     """
@@ -40,7 +45,7 @@ def assign_position_group(player_positions: str) -> str:
     return None     # Unclassified — will be dropped
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# === Main =============================================================================================================
 
 def main():
     print("=" * 60)
@@ -48,27 +53,27 @@ def main():
     print(f" Input : {RAW_CSV}")
     print("=" * 60)
 
-    # ── Load ──────────────────────────────────────────────────────────────────
+    # === Load =========================================================================================================
     if not os.path.exists(RAW_CSV):
         print(f"\nERROR: {RAW_CSV} not found.")
-        print("Place players_20.csv in data/raw/ and retry.")
+        print("Place players_raw.csv in data/raw/ and retry.")
         sys.exit(1)
 
     df = pd.read_csv(RAW_CSV, low_memory=False)
     print(f"\nRaw data loaded: {df.shape[0]:,} players × {df.shape[1]} columns")
 
-    # ── Drop rows with missing target ─────────────────────────────────────────
+    # === Drop rows with missing target ================================================================================
     before = len(df)
     df = df.dropna(subset=[TARGET_COL])
     print(f"Dropped {before - len(df)} rows with missing value_eur")
 
-    # ── Filter out zero / near-zero values ────────────────────────────────────
+    # === Filter out zero / near-zero values ===========================================================================
     before = len(df)
     df = df[df[TARGET_COL] >= MIN_VALUE]
     print(f"Dropped {before - len(df)} players with value < €{MIN_VALUE:,}")
 
-    # ── Assign position groups ────────────────────────────────────────────────
-    df["position_group"] = df["player_positions"].apply(assign_position_group)
+    # === Assign position groups =======================================================================================
+    df["position_group"] = df["player_positions"].apply(assign_position_group)                   #apply primary position
 
     before = len(df)
     df = df.dropna(subset=["position_group"])
@@ -79,14 +84,14 @@ def main():
     for group, count in counts.items():
         print(f"  {group:<12}: {count:>5,} players")
 
-    # ── Log-transform target ───────────────────────────────────────────────────
+    # === Log-transform target =========================================================================================
     if USE_LOG_TARGET:
         df["log_value_eur"] = np.log1p(df[TARGET_COL])
         print(f"\nLog-transformed target created: log_value_eur")
         print(f"  Original range : €{df[TARGET_COL].min():>12,.0f} – €{df[TARGET_COL].max():>12,.0f}")
         print(f"  Log range      : {df['log_value_eur'].min():.3f} – {df['log_value_eur'].max():.3f}")
 
-    # ── Save one CSV per position group ───────────────────────────────────────
+    # === Save one CSV per position group ==============================================================================
     print(f"\nSaving position-specific CSVs to: {PROC_DIR}")
 
     for group, key in POS_KEYS.items():
@@ -109,13 +114,14 @@ def main():
             if group_df[col].isna().any():
                 group_df[col] = group_df[col].fillna(group_df[col].median())
 
-        output_path = os.path.join(PROC_DIR, f"{key}_data.csv")
+        #output_path = os.path.join(PROC_DIR, f"{key}_data.csv")                                              #
+        output_path = PROC_DIR / f"{key}_data.csv"
         group_df.to_csv(output_path, index=False)
 
         print(f"  {group:<12} ({key}) → {len(group_df):>4,} players, "
               f"{len(feature_cols_present)} features → {output_path}")
 
-    # ── Summary Statistics ─────────────────────────────────────────────────────
+    # === Summary Statistics ===========================================================================================
     print(f"\nMarket Value Summary by Position (EUR):")
     print(f"{'Position':<14} {'Median':>12} {'Mean':>12} {'Max':>14}")
     print("-" * 55)
@@ -130,3 +136,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

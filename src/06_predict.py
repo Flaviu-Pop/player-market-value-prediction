@@ -1,11 +1,11 @@
 # src/06_predict.py
-# Step 6: Prediction Interface
-# Given a player's attributes, predict their market value using the trained model.
-#
+
+# Step 6: Prediction Interface: Given a player's attributes, predict their market value using the trained model.
+
 # Two usage modes:
 #   A) Interactive CLI — prompts you to enter attributes one by one
 #   B) Direct API     — call predict_player() from another script
-#
+
 # Usage:
 #   python src/06_predict.py
 #   python src/06_predict.py --position Forward --interactive
@@ -19,19 +19,56 @@ import pandas as pd
 import joblib
 import torch
 import warnings
+
 warnings.filterwarnings("ignore")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from config import MODELS_DIR, POS_KEYS, POSITION_FEATURES, DEVICE if False else None
-from train_models import PlayerValueNet
+
+from config import MODELS_DIR, POS_KEYS, POSITION_FEATURES
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# ======================================================================================================================
+# Add the class definition directly, again (instead of importing from 03_train_models.py):
+# The problem is that Python does not allow to import a file that starts with a number
+
+import torch.nn as nn
+from config import HIDDEN_DIMS, DROPOUT_RATES
+
+class PlayerValueNet(nn.Module):
+    def __init__(self, input_dim, hidden_dims=HIDDEN_DIMS, dropout_rates=DROPOUT_RATES):
+        super().__init__()
+        layers = []
+        prev_dim = input_dim
+        for hidden_dim, dropout_rate in zip(hidden_dims, dropout_rates):
+            layers.extend([
+                nn.Linear(prev_dim, hidden_dim),
+                nn.BatchNorm1d(hidden_dim),
+                nn.ReLU(),
+            ])
+            if dropout_rate > 0:
+                layers.append(nn.Dropout(dropout_rate))
+            prev_dim = hidden_dim
+        layers.append(nn.Linear(prev_dim, 1))
+        self.network = nn.Sequential(*layers)
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight, nonlinearity="relu")
+                nn.init.zeros_(m.bias)
+
+    def forward(self, x):
+        return self.network(x).squeeze(-1)
+# ======================================================================================================================
 
 
 # ── Model Loading ─────────────────────────────────────────────────────────────
 
 def load_artifacts(key: str):
     """Load model, scaler and feature list for a position group."""
+
     model_path   = os.path.join(MODELS_DIR, f"{key}_model.pth")
     scaler_path  = os.path.join(MODELS_DIR, f"{key}_scaler.joblib")
     feature_path = os.path.join(MODELS_DIR, f"{key}_features.joblib")
@@ -48,7 +85,9 @@ def load_artifacts(key: str):
 
     checkpoint = torch.load(model_path, map_location=DEVICE)
     input_dim  = checkpoint["input_dim"]
+
     model      = PlayerValueNet(input_dim).to(DEVICE)
+
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
@@ -87,19 +126,24 @@ def predict_player(position_group: str, attributes: dict) -> dict:
         )
 
     key             = POS_KEYS[position_group]
+
     model, scaler, features = load_artifacts(key)
 
     # Build feature vector — fill missing with 0
     missing = [f for f in features if f not in attributes]
+
     feature_vector = np.array(
         [attributes.get(f, 0.0) for f in features], dtype=np.float32
     ).reshape(1, -1)
 
+
     # Scale
     feature_vector_scaled = scaler.transform(feature_vector)
 
+
     # Predict
     x_tensor = torch.tensor(feature_vector_scaled, dtype=torch.float32).to(DEVICE)
+
     with torch.no_grad():
         log_pred = model(x_tensor).item()
 
@@ -120,12 +164,13 @@ def predict_player(position_group: str, attributes: dict) -> dict:
     }
 
 
-# ── Interactive CLI ────────────────────────────────────────────────────────────
+# === Interactive CLI ==================================================================================================
 
 def interactive_predict(position_group: str) -> None:
     """Prompt user to enter attribute values one by one, then predict."""
 
     key = POS_KEYS[position_group]
+
     try:
         _, _, features = load_artifacts(key)
     except FileNotFoundError as e:
@@ -135,8 +180,10 @@ def interactive_predict(position_group: str) -> None:
     print(f"\n{'='*60}")
     print(f" Market Value Prediction — {position_group}")
     print(f"{'='*60}")
+
     print(f" Enter attribute values below.")
     print(f" Press ENTER to skip (uses 0 — enter median for best accuracy).")
+
     print(f"{'='*60}\n")
 
     attributes = {}
@@ -161,6 +208,7 @@ def _print_result(result: dict) -> None:
     print(f"\n{'='*60}")
     print(f" PREDICTION RESULT")
     print(f"{'='*60}")
+
     print(f" Position       : {result['position_group']}")
     print(f" Predicted Value: €{result['predicted_eur']:>15,.0f}")
     print(f"                : €{result['predicted_m_eur']:.2f}M")
@@ -168,6 +216,7 @@ def _print_result(result: dict) -> None:
     low, high = result['confidence_range']
     print(f"   Low  : €{low:>15,.0f}")
     print(f"   High : €{high:>15,.0f}")
+
     if result['missing_features']:
         print(f"\n NOTE: {len(result['missing_features'])} features set to 0 "
               f"(not provided):")
@@ -175,10 +224,11 @@ def _print_result(result: dict) -> None:
             print(f"   - {f}")
         if len(result['missing_features']) > 5:
             print(f"   ... and {len(result['missing_features'])-5} more")
+
     print(f"{'='*60}\n")
 
 
-# ── Demo Examples ─────────────────────────────────────────────────────────────
+# === Demo Examples ====================================================================================================
 
 DEMO_PLAYERS = {
 
@@ -247,6 +297,7 @@ DEMO_PLAYERS = {
 
 def run_demo() -> None:
     """Run predictions for four built-in demo player profiles."""
+
     print("\n" + "=" * 60)
     print(" DEMO MODE — Predicting 4 example player profiles")
     print("=" * 60)
@@ -260,33 +311,35 @@ def run_demo() -> None:
             print(f"  SKIP: {e}")
 
 
-# ── Entry Point ───────────────────────────────────────────────────────────────
+# === Entry Point ======================================================================================================
 
 def main():
     parser = argparse.ArgumentParser(
         description="Football Player Market Value Predictor"
     )
+
     parser.add_argument(
         "--demo", action="store_true",
         help="Run demo predictions for 4 built-in player profiles"
     )
+
     parser.add_argument(
         "--position", type=str,
         choices=["Goalkeeper", "Defender", "Midfielder", "Forward"],
         help="Position group for interactive prediction"
     )
+
     parser.add_argument(
         "--interactive", action="store_true",
         help="Launch interactive attribute input mode"
     )
+
     args = parser.parse_args()
 
     if args.demo:
         run_demo()
-
     elif args.interactive and args.position:
         interactive_predict(args.position)
-
     else:
         # Default: run demo then offer interactive mode
         run_demo()
@@ -302,3 +355,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

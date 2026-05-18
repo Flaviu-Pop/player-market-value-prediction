@@ -1,27 +1,46 @@
 # src/config.py
+
 # Central configuration for all scripts
 # Edit hyperparameters and feature lists here
 
 import os
+from pathlib import Path
 
-# ── Paths ──────────────────────────────────────────────────────────────────────
+# === Paths ============================================================================================================
+BASE_DIR = Path(__file__).parent.parent
+DATA_DIR = BASE_DIR / "data"
+PROC_DIR = DATA_DIR / "processed"
+
+RAW_CSV  = DATA_DIR / "raw" / "players_raw.csv"
+
+MODELS_DIR = BASE_DIR / "models"
+CHARTS_DIR = BASE_DIR / "outputs" / "charts"
+METRICS_DIR = BASE_DIR / "outputs" / "metrics"
+
+#INPUT_CSV  = DATA_DIR / "gps_raw.csv"
+#OUTPUT_CSV = DATA_DIR / "gps_processed.csv"
+
+"""
 BASE_DIR        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW_CSV         = os.path.join(BASE_DIR, "data", "raw",       "players_20.csv")
 PROC_DIR        = os.path.join(BASE_DIR, "data", "processed")
 MODELS_DIR      = os.path.join(BASE_DIR, "models")
 CHARTS_DIR      = os.path.join(BASE_DIR, "outputs", "charts")
 METRICS_DIR     = os.path.join(BASE_DIR, "outputs", "metrics")
+"""
+
 
 for d in [PROC_DIR, MODELS_DIR, CHARTS_DIR, METRICS_DIR]:
     os.makedirs(d, exist_ok=True)
 
-# ── Position Groups ────────────────────────────────────────────────────────────
+# === Position Groups ==================================================================================================
 POSITION_GROUPS = {
     "Goalkeeper": ["GK"],
     "Defender":   ["CB", "LB", "RB", "LWB", "RWB"],
     "Midfielder": ["CDM", "CM", "CAM", "LM", "RM"],
     "Forward":    ["LW", "RW", "ST", "CF", "SS"],
 }
+
 
 # Short keys used for file naming and model saving
 POS_KEYS = {
@@ -31,12 +50,14 @@ POS_KEYS = {
     "Forward":    "fwd",
 }
 
-# ── Target Variable ────────────────────────────────────────────────────────────
+
+# === Target Variable ==================================================================================================
 TARGET_COL      = "value_eur"
 MIN_VALUE       = 10_000        # Filter out zero/near-zero value players
 USE_LOG_TARGET  = True          # Predict log(value) — strongly recommended
 
-# ── General Features (used by all positions) ───────────────────────────────────
+
+# === General Features (used by all positions) =========================================================================
 GENERAL_FEATURES = [
     "age",
     "height_cm",
@@ -48,7 +69,8 @@ GENERAL_FEATURES = [
     "skill_moves",
 ]
 
-# ── Position-Specific Features ─────────────────────────────────────────────────
+
+# === Position-Specific Features =======================================================================================
 POSITION_FEATURES = {
 
     "Goalkeeper": GENERAL_FEATURES + [
@@ -127,13 +149,15 @@ POSITION_FEATURES = {
     ],
 }
 
-# ── Train / Validation / Test Split ───────────────────────────────────────────
+
+# === Train / Validation / Test Split ==================================================================================
 TRAIN_RATIO = 0.70
 VAL_RATIO   = 0.15
 TEST_RATIO  = 0.15
-RANDOM_SEED = 42
+RANDOM_SEED = 22
 
-# ── Neural Network Hyperparameters ────────────────────────────────────────────
+
+# === Neural Network Hyperparameters ===================================================================================
 HIDDEN_DIMS   = [128, 64, 32]   # Neurons per hidden layer
 DROPOUT_RATES = [0.3, 0.2, 0.0] # Dropout after each hidden layer
 BATCH_SIZE    = 64
@@ -142,13 +166,15 @@ WEIGHT_DECAY  = 1e-4             # L2 regularization
 MAX_EPOCHS    = 300
 PATIENCE      = 20               # Early stopping patience (epochs)
 
-# ── Visualization ──────────────────────────────────────────────────────────────
+
+# === Visualization ====================================================================================================
 POSITION_COLORS = {
     "Goalkeeper": "#3498DB",   # Blue
     "Defender":   "#2ECC71",   # Green
     "Midfielder": "#F39C12",   # Orange
     "Forward":    "#E74C3C",   # Red
 }
+
 FIG_SIZE_WIDE   = (14, 6)
 FIG_SIZE_SQUARE = (10, 10)
 DPI             = 150

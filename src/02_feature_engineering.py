@@ -1,10 +1,11 @@
 # src/02_feature_engineering.py
+
 # Step 2: Scale features, split train/val/test, save ready-to-train tensors
+
 # Input : data/processed/{gk,def,mid,fwd}_data.csv
 # Output: data/processed/{key}_train/val/test.csv + scalers in models/
-#
-# Usage:
-#   python src/02_feature_engineering.py
+
+# Usage: python src/02_feature_engineering.py
 
 import os
 import sys
@@ -12,12 +13,14 @@ import numpy as np
 import pandas as pd
 import joblib
 import warnings
+
 warnings.filterwarnings("ignore")
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing   import StandardScaler
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from config import (
     PROC_DIR, MODELS_DIR, POS_KEYS, POSITION_FEATURES,
     TARGET_COL, USE_LOG_TARGET,
@@ -29,6 +32,7 @@ def process_position(group: str, key: str) -> None:
     """Load, scale, split and save one position group."""
 
     input_path = os.path.join(PROC_DIR, f"{key}_data.csv")
+
     if not os.path.exists(input_path):
         print(f"  WARNING: {input_path} not found — run 01_data_preparation.py first")
         return
@@ -43,18 +47,24 @@ def process_position(group: str, key: str) -> None:
     X = df[feature_cols].values.astype(np.float32)
     y = df[target_col].values.astype(np.float32)
 
-    # ── Train / Val / Test Split ───────────────────────────────────────────────
+    # === Train / Val / Test Split =====================================================================================
     # First split off test set, then split remainder into train/val
     val_test_ratio = VAL_RATIO + TEST_RATIO
+
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=val_test_ratio, random_state=RANDOM_SEED
     )
-    val_fraction = VAL_RATIO / val_test_ratio
+
+    #val_fraction = VAL_RATIO / val_test_ratio
+    #X_val, X_test, y_val, y_test = train_test_split(
+    #    X_temp, y_temp, test_size=(1 - val_fraction), random_state=RANDOM_SEED
+    #)
+
     X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=(1 - val_fraction), random_state=RANDOM_SEED
+        X_temp, y_temp, test_size=TEST_RATIO, random_state=RANDOM_SEED
     )
 
-    # ── Scale Features ────────────────────────────────────────────────────────
+    # === Scale Features ===============================================================================================
     # Fit ONLY on training data — apply to val and test
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
@@ -69,10 +79,11 @@ def process_position(group: str, key: str) -> None:
     feature_list_path = os.path.join(MODELS_DIR, f"{key}_features.joblib")
     joblib.dump(feature_cols, feature_list_path)
 
-    # ── Save Splits as CSV ────────────────────────────────────────────────────
+    # === Save Splits as CSV ===========================================================================================
     def save_split(X_arr, y_arr, split_name):
         split_df = pd.DataFrame(X_arr, columns=feature_cols)
         split_df["target"] = y_arr
+
         out = os.path.join(PROC_DIR, f"{key}_{split_name}.csv")
         split_df.to_csv(out, index=False)
 
@@ -86,8 +97,10 @@ def process_position(group: str, key: str) -> None:
             df.sample(frac=TRAIN_RATIO + VAL_RATIO, random_state=RANDOM_SEED).index
         )
     ]
+
     id_cols = ["sofifa_id", "short_name", "club", TARGET_COL, "log_value_eur"]
     id_cols = [c for c in id_cols if c in df.columns]
+
     df_test_meta = df[id_cols].iloc[-len(y_test):].copy()
     df_test_meta.to_csv(os.path.join(PROC_DIR, f"{key}_test_meta.csv"), index=False)
 
@@ -100,7 +113,9 @@ def main():
     print("=" * 60)
     print(" Step 2: Feature Engineering & Data Splitting")
     print("=" * 60)
+
     print(f"\n Target: {'log(value_eur)' if USE_LOG_TARGET else 'value_eur'}")
+
     print(f" Split : {int(TRAIN_RATIO*100)}% train / "
           f"{int(VAL_RATIO*100)}% val / "
           f"{int(TEST_RATIO*100)}% test\n")

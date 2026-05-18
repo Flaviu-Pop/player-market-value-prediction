@@ -1,15 +1,15 @@
 # src/05_visualizations.py
+
 # Step 5: Generate all charts
-#
+
 # Charts produced:
 #   01_value_distribution.png       — Market value distribution by position
 #   02_training_curves_{key}.png    — Loss curves per position
 #   03_actual_vs_predicted.png      — Scatter: actual vs predicted (all positions)
 #   04_residuals.png                — Residual distribution per position
 #   05_metrics_comparison.png       — MAE / R² bar chart across positions
-#
-# Usage:
-#   python src/05_visualizations.py
+
+# Usage: python src/05_visualizations.py
 
 import os
 import sys
@@ -20,9 +20,11 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import seaborn as sns
 import warnings
+
 warnings.filterwarnings("ignore")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from config import (
     PROC_DIR, METRICS_DIR, CHARTS_DIR, POS_KEYS,
     POSITION_COLORS, FIG_SIZE_WIDE, FIG_SIZE_SQUARE, DPI
@@ -31,7 +33,7 @@ from config import (
 sns.set_theme(style="whitegrid", font_scale=1.1)
 
 
-# ── Chart 1: Value Distribution by Position ───────────────────────────────────
+# === Chart 1: Value Distribution by Position ==========================================================================
 
 def plot_value_distribution():
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -45,6 +47,7 @@ def plot_value_distribution():
             continue
 
         df    = pd.read_csv(path)
+
         color = POSITION_COLORS[group]
 
         axes[i].hist(
@@ -64,13 +67,15 @@ def plot_value_distribution():
     fig.suptitle("Market Value Distribution by Position Group (log scale)",
                  fontsize=15, fontweight="bold", y=1.01)
     plt.tight_layout()
+
     path = os.path.join(CHARTS_DIR, "01_value_distribution.png")
     plt.savefig(path, dpi=DPI, bbox_inches="tight")
+
     plt.close()
     print(f"  Saved: {path}")
 
 
-# ── Chart 2: Training Loss Curves ─────────────────────────────────────────────
+# === Chart 2: Training Loss Curves ====================================================================================
 
 def plot_training_curves():
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -83,6 +88,7 @@ def plot_training_curves():
             continue
 
         hist  = pd.read_csv(hist_path)
+
         color = POSITION_COLORS[group]
 
         axes[i].plot(hist["epoch"], hist["train_loss"],
@@ -106,13 +112,15 @@ def plot_training_curves():
     fig.suptitle("Training & Validation Loss Curves — All Position Models",
                  fontsize=15, fontweight="bold")
     plt.tight_layout()
+
     path = os.path.join(CHARTS_DIR, "02_training_curves.png")
     plt.savefig(path, dpi=DPI, bbox_inches="tight")
+
     plt.close()
     print(f"  Saved: {path}")
 
 
-# ── Chart 3: Actual vs Predicted ──────────────────────────────────────────────
+# === Chart 3: Actual vs Predicted =====================================================================================
 
 def plot_actual_vs_predicted():
     fig, axes = plt.subplots(2, 2, figsize=(14, 12))
@@ -124,6 +132,7 @@ def plot_actual_vs_predicted():
             continue
 
         df    = pd.read_csv(pred_path)
+
         color = POSITION_COLORS[group]
 
         actual    = np.log1p(df["actual_eur"])
@@ -159,13 +168,15 @@ def plot_actual_vs_predicted():
     fig.suptitle("Actual vs Predicted Market Value — All Positions (log scale)",
                  fontsize=15, fontweight="bold")
     plt.tight_layout()
+
     path = os.path.join(CHARTS_DIR, "03_actual_vs_predicted.png")
     plt.savefig(path, dpi=DPI, bbox_inches="tight")
+
     plt.close()
     print(f"  Saved: {path}")
 
 
-# ── Chart 4: Residual Distribution ────────────────────────────────────────────
+# === Chart 4: Residual Distribution ===================================================================================
 
 def plot_residuals():
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -177,6 +188,7 @@ def plot_residuals():
             continue
 
         df    = pd.read_csv(pred_path)
+
         color = POSITION_COLORS[group]
 
         # Residuals in log space (less sensitive to outliers)
@@ -197,13 +209,15 @@ def plot_residuals():
     fig.suptitle("Residual Distribution — Model Prediction Errors",
                  fontsize=15, fontweight="bold")
     plt.tight_layout()
+
     path = os.path.join(CHARTS_DIR, "04_residuals.png")
     plt.savefig(path, dpi=DPI, bbox_inches="tight")
+
     plt.close()
     print(f"  Saved: {path}")
 
 
-# ── Chart 5: Cross-Position Metrics Comparison ────────────────────────────────
+# === Chart 5: Cross-Position Metrics Comparison =======================================================================
 
 def plot_metrics_comparison():
     metrics_path = os.path.join(METRICS_DIR, "all_positions_metrics.json")
@@ -215,7 +229,9 @@ def plot_metrics_comparison():
         metrics = json.load(f)
 
     df = pd.DataFrame(metrics)
+
     positions = df["position"].tolist()
+
     colors    = [POSITION_COLORS[p] for p in positions]
 
     fig, axes = plt.subplots(1, 3, figsize=(16, 6))
@@ -246,13 +262,16 @@ def plot_metrics_comparison():
     fig.suptitle("Model Performance Comparison — All Position Groups",
                  fontsize=15, fontweight="bold")
     plt.tight_layout()
+
     path = os.path.join(CHARTS_DIR, "05_metrics_comparison.png")
     plt.savefig(path, dpi=DPI, bbox_inches="tight")
+
     plt.close()
     print(f"  Saved: {path}")
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+
+# === Main =============================================================================================================
 
 def main():
     print("=" * 60)
@@ -263,8 +282,10 @@ def main():
     print("[1/5] Value distribution by position...")
     plot_value_distribution()
 
+
     print("[2/5] Training loss curves...")
     plot_training_curves()
+
 
     print("[3/5] Actual vs predicted scatter plots...")
     plot_actual_vs_predicted()
@@ -272,8 +293,10 @@ def main():
     print("[4/5] Residual distributions...")
     plot_residuals()
 
+
     print("[5/5] Cross-position metrics comparison...")
     plot_metrics_comparison()
+
 
     print("\n" + "=" * 60)
     print(" All charts saved to outputs/charts/")
@@ -283,3 +306,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
