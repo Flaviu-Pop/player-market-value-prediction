@@ -30,7 +30,7 @@ specific models learn the right relationships for each role.
 ## Project Structure
 
 ```
-project5_market_value/
+player_market_value_prediction/
 │
 ├── README.md                        # This file
 ├── requirements.txt                 # Python dependencies
@@ -46,10 +46,10 @@ project5_market_value/
 │   └── 06_predict.py                # Prediction interface for new players
 │
 ├── data/
-│   ├── raw/players_20.csv           # Source data (place here)
-│   └── processed/                   # Auto-generated cleaned CSVs per position
+│   ├── raw/players_raw.csv          # Source data (place here)
+│   └── processed/                   # Generated cleaned CSVs per position
 │
-├── models/                          # Saved .pth model files (auto-generated)
+├── models/                          # Saved .pth model files (generated)
 │   ├── gk_model.pth
 │   ├── def_model.pth
 │   ├── mid_model.pth
@@ -123,7 +123,7 @@ pip install -r requirements.txt
 ```
 
 ### 4. Add data
-Place `players_20.csv` in the `data/raw/` folder.
+Place `players_raw.csv` in the `data/raw/` folder.
 
 ---
 
@@ -166,18 +166,19 @@ python src/06_predict.py
 ## Planned Improvements (v2)
 - Compare PyTorch models against XGBoost baseline
 - SHAP values for feature importance explanation
-- Hyperparameter tuning with Optuna
+# - Hyperparameter tuning with Optuna
 
 ---
 
 ## About the Author
 
-Flaviu Pop is a Data Scientist and Football Analyst with a PhD in Mathematics
-and 14 years of academic experience, currently completing a Professional Diploma
-in Football Tactical Analysis at the Barça Innovation Hub.
+Flaviu Pop is a Data Scientist/Machine Learning Engineer and Football Analyst with a PhD in Mathematics and over 15 years 
+of academic experience at Babeș-Bolyai University. He completed the Data Analytics in Sport course from Johan Cruyff Institute 
+and is currently completing a Professional Diploma in Football Tactical Analysis at the Barça Innovation Hub.
 
 - GitHub: [github.com/Flaviu-Pop](https://github.com/Flaviu-Pop)
 - LinkedIn: [linkedin.com/in/flaviu-pop-61b00369](https://linkedin.com/in/flaviu-pop-61b00369)
+- Google Scholar: https://scholar.google.com/citations?user=KgQVIt4AAAAJ&hl=en
 
 ---
 
