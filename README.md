@@ -38,6 +38,7 @@ player_market_value_prediction/
 │
 ├── src/
 │   ├── config.py                    # Features per position, hyperparameters
+│   ├── model.py                     # The model (architecture)
 │   ├── 01_data_preparation.py       # Cleaning, position grouping, log transform
 │   ├── 02_feature_engineering.py    # Position-specific feature selection & scaling
 │   ├── 03_train_models.py           # Train 4 PyTorch models with early stopping
@@ -166,7 +167,6 @@ python src/06_predict.py
 ## Planned Improvements (v2)
 - Compare PyTorch models against XGBoost baseline
 - SHAP values for feature importance explanation
-# - Hyperparameter tuning with Optuna
 
 ---
 

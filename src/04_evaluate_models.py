@@ -7,72 +7,33 @@
 # Input : models/{key}_model.pth + data/processed/{key}_test.csv
 # Output: outputs/metrics/{key}_metrics.json + {key}_predictions.csv
 
-
 # Usage: python src/04_evaluate_models.py
 
-import os
-import sys
-import json
-import numpy as np
-import pandas as pd
-import warnings
 
 import torch
 import torch.nn as nn
+import numpy as np
+import pandas as pd
+import os
+import sys
+import json
+import warnings
+
 
 from sklearn.metrics import r2_score, mean_absolute_error
-
-warnings.filterwarnings("ignore")
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from config import (
     PROC_DIR, MODELS_DIR, METRICS_DIR, POS_KEYS, USE_LOG_TARGET,
-    #DEVICE if False else None,
-
 )
+from config import HIDDEN_DIMS, DROPOUT_RATES
+from model import PlayerValueNet
+
+warnings.filterwarnings("ignore")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-# ======================================================================================================================
-# Add the class definition directly, again (instead of importing from 03_train_models.py):
-# The problem is that Python does not allow to import a file that starts with a number
-
-import torch.nn as nn
-from config import HIDDEN_DIMS, DROPOUT_RATES
-
-class PlayerValueNet(nn.Module):
-    def __init__(self, input_dim, hidden_dims=HIDDEN_DIMS, dropout_rates=DROPOUT_RATES):
-        super().__init__()
-        layers = []
-        prev_dim = input_dim
-        for hidden_dim, dropout_rate in zip(hidden_dims, dropout_rates):
-            layers.extend([
-                nn.Linear(prev_dim, hidden_dim),
-                nn.BatchNorm1d(hidden_dim),
-                nn.ReLU(),
-            ])
-            if dropout_rate > 0:
-                layers.append(nn.Dropout(dropout_rate))
-            prev_dim = hidden_dim
-        layers.append(nn.Linear(prev_dim, 1))
-        self.network = nn.Sequential(*layers)
-        self._initialize_weights()
-
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight, nonlinearity="relu")
-                nn.init.zeros_(m.bias)
-
-    def forward(self, x):
-        return self.network(x).squeeze(-1)
-# ======================================================================================================================
-
-
 # === Helpers ==========================================================================================================
-
 def load_model(key: str, input_dim: int) -> nn.Module:
     """Load best saved model weights."""
 
@@ -91,14 +52,18 @@ def load_model(key: str, input_dim: int) -> nn.Module:
 
 
 def mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Mean Absolute Percentage Error — avoids division by zero."""
+    """
+    Mean Absolute Percentage Error — avoids division by zero.
+    """
 
     mask = y_true > 0
     return float(np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100)
 
 
 def evaluate_position(group: str, key: str) -> dict:
-    """Evaluate one position model on its test set."""
+    """
+    Evaluate one position model on its test set.
+    """
 
     # === Load test features ===========================================================================================
     test_path = os.path.join(PROC_DIR, f"{key}_test.csv")
@@ -174,7 +139,6 @@ def evaluate_position(group: str, key: str) -> dict:
 
 
 # === Main =============================================================================================================
-
 def main():
     print("=" * 60)
     print(" Step 4: Model Evaluation")
@@ -221,4 +185,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

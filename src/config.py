@@ -17,21 +17,9 @@ MODELS_DIR = BASE_DIR / "models"
 CHARTS_DIR = BASE_DIR / "outputs" / "charts"
 METRICS_DIR = BASE_DIR / "outputs" / "metrics"
 
-#INPUT_CSV  = DATA_DIR / "gps_raw.csv"
-#OUTPUT_CSV = DATA_DIR / "gps_processed.csv"
-
-"""
-BASE_DIR        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_CSV         = os.path.join(BASE_DIR, "data", "raw",       "players_20.csv")
-PROC_DIR        = os.path.join(BASE_DIR, "data", "processed")
-MODELS_DIR      = os.path.join(BASE_DIR, "models")
-CHARTS_DIR      = os.path.join(BASE_DIR, "outputs", "charts")
-METRICS_DIR     = os.path.join(BASE_DIR, "outputs", "metrics")
-"""
-
-
 for d in [PROC_DIR, MODELS_DIR, CHARTS_DIR, METRICS_DIR]:
     os.makedirs(d, exist_ok=True)
+
 
 # === Position Groups ==================================================================================================
 POSITION_GROUPS = {
@@ -40,7 +28,6 @@ POSITION_GROUPS = {
     "Midfielder": ["CDM", "CM", "CAM", "LM", "RM"],
     "Forward":    ["LW", "RW", "ST", "CF", "SS"],
 }
-
 
 # Short keys used for file naming and model saving
 POS_KEYS = {
@@ -178,3 +165,5 @@ POSITION_COLORS = {
 FIG_SIZE_WIDE   = (14, 6)
 FIG_SIZE_SQUARE = (10, 10)
 DPI             = 150
+
+

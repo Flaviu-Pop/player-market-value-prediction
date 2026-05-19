@@ -11,63 +11,31 @@
 #   python src/06_predict.py --position Forward --interactive
 #   python src/06_predict.py --demo   (runs built-in demo examples)
 
+
+import torch
+import torch.nn as nn
+import numpy as np
+import pandas as pd
 import os
 import sys
 import argparse
-import numpy as np
-import pandas as pd
 import joblib
-import torch
 import warnings
 
+from config import MODELS_DIR, POS_KEYS, POSITION_FEATURES, HIDDEN_DIMS, DROPOUT_RATES
+from model import PlayerValueNet
+
 warnings.filterwarnings("ignore")
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from config import MODELS_DIR, POS_KEYS, POSITION_FEATURES
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ======================================================================================================================
-# Add the class definition directly, again (instead of importing from 03_train_models.py):
-# The problem is that Python does not allow to import a file that starts with a number
-
-import torch.nn as nn
-from config import HIDDEN_DIMS, DROPOUT_RATES
-
-class PlayerValueNet(nn.Module):
-    def __init__(self, input_dim, hidden_dims=HIDDEN_DIMS, dropout_rates=DROPOUT_RATES):
-        super().__init__()
-        layers = []
-        prev_dim = input_dim
-        for hidden_dim, dropout_rate in zip(hidden_dims, dropout_rates):
-            layers.extend([
-                nn.Linear(prev_dim, hidden_dim),
-                nn.BatchNorm1d(hidden_dim),
-                nn.ReLU(),
-            ])
-            if dropout_rate > 0:
-                layers.append(nn.Dropout(dropout_rate))
-            prev_dim = hidden_dim
-        layers.append(nn.Linear(prev_dim, 1))
-        self.network = nn.Sequential(*layers)
-        self._initialize_weights()
-
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight, nonlinearity="relu")
-                nn.init.zeros_(m.bias)
-
-    def forward(self, x):
-        return self.network(x).squeeze(-1)
-# ======================================================================================================================
-
 
 # ── Model Loading ─────────────────────────────────────────────────────────────
-
 def load_artifacts(key: str):
-    """Load model, scaler and feature list for a position group."""
+    """
+    Load model, scaler and feature list for a position group.
+    """
 
     model_path   = os.path.join(MODELS_DIR, f"{key}_model.pth")
     scaler_path  = os.path.join(MODELS_DIR, f"{key}_scaler.joblib")
@@ -95,7 +63,6 @@ def load_artifacts(key: str):
 
 
 # ── Core Prediction Function ───────────────────────────────────────────────────
-
 def predict_player(position_group: str, attributes: dict) -> dict:
     """
     Predict market value for a single player.
@@ -165,7 +132,6 @@ def predict_player(position_group: str, attributes: dict) -> dict:
 
 
 # === Interactive CLI ==================================================================================================
-
 def interactive_predict(position_group: str) -> None:
     """Prompt user to enter attribute values one by one, then predict."""
 
@@ -204,7 +170,9 @@ def interactive_predict(position_group: str) -> None:
 
 
 def _print_result(result: dict) -> None:
-    """Pretty-print prediction result."""
+    """
+    Pretty-print prediction result.
+    """
     print(f"\n{'='*60}")
     print(f" PREDICTION RESULT")
     print(f"{'='*60}")
@@ -229,9 +197,7 @@ def _print_result(result: dict) -> None:
 
 
 # === Demo Examples ====================================================================================================
-
 DEMO_PLAYERS = {
-
     "Goalkeeper": {
         "name": "Elite Young GK (like Donnarumma profile)",
         "attrs": {
@@ -296,7 +262,9 @@ DEMO_PLAYERS = {
 
 
 def run_demo() -> None:
-    """Run predictions for four built-in demo player profiles."""
+    """
+    Run predictions for four built-in demo player profiles.
+    """
 
     print("\n" + "=" * 60)
     print(" DEMO MODE — Predicting 4 example player profiles")
@@ -312,7 +280,6 @@ def run_demo() -> None:
 
 
 # === Entry Point ======================================================================================================
-
 def main():
     parser = argparse.ArgumentParser(
         description="Football Player Market Value Predictor"
@@ -355,5 +322,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

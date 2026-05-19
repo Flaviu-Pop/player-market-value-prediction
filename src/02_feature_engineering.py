@@ -7,25 +7,25 @@
 
 # Usage: python src/02_feature_engineering.py
 
-import os
-import sys
+
 import numpy as np
 import pandas as pd
+import os
+import sys
 import joblib
 import warnings
 
-warnings.filterwarnings("ignore")
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing   import StandardScaler
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from config import (
     PROC_DIR, MODELS_DIR, POS_KEYS, POSITION_FEATURES,
     TARGET_COL, USE_LOG_TARGET,
     TRAIN_RATIO, VAL_RATIO, TEST_RATIO, RANDOM_SEED
 )
+
+
+warnings.filterwarnings("ignore")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def process_position(group: str, key: str) -> None:
@@ -55,19 +55,16 @@ def process_position(group: str, key: str) -> None:
         X, y, test_size=val_test_ratio, random_state=RANDOM_SEED
     )
 
-    #val_fraction = VAL_RATIO / val_test_ratio
-    #X_val, X_test, y_val, y_test = train_test_split(
-    #    X_temp, y_temp, test_size=(1 - val_fraction), random_state=RANDOM_SEED
-    #)
-
+    val_fraction = VAL_RATIO / val_test_ratio
     X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=TEST_RATIO, random_state=RANDOM_SEED
+        X_temp, y_temp, test_size=(1 - val_fraction), random_state=RANDOM_SEED
     )
 
     # === Scale Features ===============================================================================================
     # Fit ONLY on training data — apply to val and test
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
+
     X_val   = scaler.transform(X_val)
     X_test  = scaler.transform(X_test)
 

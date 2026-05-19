@@ -5,19 +5,14 @@
 # Input : data/raw/players_raw.csv
 # Output: data/processed/{gk,def,mid,fwd}_data.csv
 
-
 # Usage: python src/01_data_preparation.py
 
 
-import os
-import sys
 import numpy as np
 import pandas as pd
+import os
+import sys
 import warnings
-
-warnings.filterwarnings("ignore")
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import (
     RAW_CSV, PROC_DIR, TARGET_COL, MIN_VALUE,
@@ -25,9 +20,11 @@ from config import (
     POSITION_FEATURES, RANDOM_SEED
 )
 
+warnings.filterwarnings("ignore")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 
 # === Position Assignment ==============================================================================================
-
 def assign_position_group(player_positions: str) -> str:
     """
     Assign a player to one of four groups based on their primary position.
@@ -46,7 +43,6 @@ def assign_position_group(player_positions: str) -> str:
 
 
 # === Main =============================================================================================================
-
 def main():
     print("=" * 60)
     print(" Step 1: Data Preparation")
@@ -114,7 +110,6 @@ def main():
             if group_df[col].isna().any():
                 group_df[col] = group_df[col].fillna(group_df[col].median())
 
-        #output_path = os.path.join(PROC_DIR, f"{key}_data.csv")                                              #
         output_path = PROC_DIR / f"{key}_data.csv"
         group_df.to_csv(output_path, index=False)
 
@@ -125,6 +120,7 @@ def main():
     print(f"\nMarket Value Summary by Position (EUR):")
     print(f"{'Position':<14} {'Median':>12} {'Mean':>12} {'Max':>14}")
     print("-" * 55)
+
     for group in POS_KEYS:
         g = df[df["position_group"] == group][TARGET_COL]
         print(f"{group:<14} {g.median():>12,.0f} {g.mean():>12,.0f} {g.max():>14,.0f}")
@@ -136,4 +132,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

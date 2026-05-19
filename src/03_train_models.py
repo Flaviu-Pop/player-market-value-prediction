@@ -5,29 +5,29 @@
 # Input : data/processed/{key}_train/val.csv
 # Output: models/{key}_model.pth + training history CSVs
 
-
 # Usage: python src/03_train_models.py
 
-import os
-import sys
-import numpy as np
-import pandas as pd
-import warnings
+
 import torch
 import torch.nn as nn
+import numpy as np
+import pandas as pd
+import os
+import sys
+import warnings
 
 from torch.utils.data import DataLoader, TensorDataset
-
-warnings.filterwarnings("ignore")
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from config import (
     PROC_DIR, MODELS_DIR, METRICS_DIR, POS_KEYS,
     HIDDEN_DIMS, DROPOUT_RATES,
     BATCH_SIZE, LEARNING_RATE, WEIGHT_DECAY,
     MAX_EPOCHS, PATIENCE, RANDOM_SEED
 )
+from model import PlayerValueNet
+
+
+warnings.filterwarnings("ignore")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 torch.manual_seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
@@ -35,54 +35,7 @@ np.random.seed(RANDOM_SEED)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-# === Model Definition =================================================================================================
-
-class PlayerValueNet(nn.Module):
-    """
-    Fully connected neural network for player market value regression.
-
-    Architecture:
-        Input → [Linear → BatchNorm → ReLU → Dropout] × N → Linear (output)
-
-    The output is log(market_value) — exponentiate after prediction.
-    """
-
-    def __init__(self, input_dim: int, hidden_dims: list = HIDDEN_DIMS, dropout_rates: list = DROPOUT_RATES):
-        super().__init__()
-
-        layers = []
-        prev_dim = input_dim
-
-        for hidden_dim, dropout_rate in zip(hidden_dims, dropout_rates):
-            layers.extend([
-                nn.Linear(prev_dim, hidden_dim),
-                nn.BatchNorm1d(hidden_dim),
-                nn.ReLU(),
-            ])
-
-            if dropout_rate > 0:
-                layers.append(nn.Dropout(dropout_rate))
-
-            prev_dim = hidden_dim
-
-        layers.append(nn.Linear(prev_dim, 1))   # Single output: log(value)
-
-        self.network = nn.Sequential(*layers)
-        self._initialize_weights()
-
-    def _initialize_weights(self):
-        """He initialization for ReLU networks."""
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight, nonlinearity="relu")
-                nn.init.zeros_(m.bias)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.network(x).squeeze(-1)
-
-
 # === Data Loading =====================================================================================================
-
 def load_split(key: str, split: str) -> TensorDataset:
     """Load a train/val/test CSV and return a TensorDataset."""
 
@@ -100,7 +53,6 @@ def load_split(key: str, split: str) -> TensorDataset:
 
 
 # === Training Loop ====================================================================================================
-
 def train_one_epoch(model, loader, optimizer, criterion) -> float:
     model.train()
     total_loss = 0.0
@@ -227,7 +179,6 @@ def train_position_model(group: str, key: str) -> dict:
 
 
 # === Main =============================================================================================================
-
 def main():
     print("=" * 60)
     print(f" Step 3: Training PyTorch Models")

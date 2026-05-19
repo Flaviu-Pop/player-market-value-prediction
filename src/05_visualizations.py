@@ -11,30 +11,30 @@
 
 # Usage: python src/05_visualizations.py
 
-import os
-import sys
-import json
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import seaborn as sns
+import os
+import sys
+import json
 import warnings
-
-warnings.filterwarnings("ignore")
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import (
     PROC_DIR, METRICS_DIR, CHARTS_DIR, POS_KEYS,
     POSITION_COLORS, FIG_SIZE_WIDE, FIG_SIZE_SQUARE, DPI
 )
 
+
+warnings.filterwarnings("ignore")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 sns.set_theme(style="whitegrid", font_scale=1.1)
 
 
 # === Chart 1: Value Distribution by Position ==========================================================================
-
 def plot_value_distribution():
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     axes = axes.flatten()
@@ -76,7 +76,6 @@ def plot_value_distribution():
 
 
 # === Chart 2: Training Loss Curves ====================================================================================
-
 def plot_training_curves():
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     axes = axes.flatten()
@@ -121,7 +120,6 @@ def plot_training_curves():
 
 
 # === Chart 3: Actual vs Predicted =====================================================================================
-
 def plot_actual_vs_predicted():
     fig, axes = plt.subplots(2, 2, figsize=(14, 12))
     axes = axes.flatten()
@@ -177,7 +175,6 @@ def plot_actual_vs_predicted():
 
 
 # === Chart 4: Residual Distribution ===================================================================================
-
 def plot_residuals():
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     axes = axes.flatten()
@@ -218,7 +215,6 @@ def plot_residuals():
 
 
 # === Chart 5: Cross-Position Metrics Comparison =======================================================================
-
 def plot_metrics_comparison():
     metrics_path = os.path.join(METRICS_DIR, "all_positions_metrics.json")
     if not os.path.exists(metrics_path):
@@ -270,9 +266,7 @@ def plot_metrics_comparison():
     print(f"  Saved: {path}")
 
 
-
 # === Main =============================================================================================================
-
 def main():
     print("=" * 60)
     print(" Step 5: Visualizations")
@@ -306,4 +300,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
